@@ -1,0 +1,22 @@
+project_name: go-boilerplate
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^refactor:'
+      - '^ci:'
+      - '^build:'
+dockers:
+  - image_templates:
+    - "ghcr.io/l-lin/{{ .ProjectName }}:latest"
+    - "ghcr.io/l-lin/{{ .ProjectName }}:{{ .Tag }}"
+
