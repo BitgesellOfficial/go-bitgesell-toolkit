@@ -11,7 +11,7 @@ func main() {
 	bitgesellSDK := blockchain.bitgesell.NewBitgesellBlockchainSDK(config)
 
 	// Example: Access Blockchain SDK methods
-	block, err := blockchain.Blockchain.GetBlockByHash("your_block_hash")
+	block, err := bitgesellSDK.Blockchain.GetBlockByHash("your_block_hash")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
