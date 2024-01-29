@@ -1,90 +1,84 @@
-package blockchain
+package main
 
 import (
-	"context"
-	gohttpclient "github.com/bozd4g/go-http-client"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
-type AddressBalance struct {
-	Balance                   int64   `json:"balance"`
-	ReceivedAmount            int64   `json:"receivedAmount"`
-	ReceivedTxCount           int     `json:"receivedTxCount"`
-	SentAmount                int64   `json:"sentAmount"`
-	SentTxCount               int     `json:"sentTxCount"`
-	FirstReceivedTxPointer    string  `json:"firstReceivedTxPointer"`
-	FirstSentTxPointer        string  `json:"firstSentTxPointer"`
-	LastTxPointer             string  `json:"lastTxPointer"`
-	LargestSpentTxAmount      int64   `json:"largestSpentTxAmount"`
-	LargestSpentTxPointer     string  `json:"largestSpentTxPointer"`
-	LargestReceivedTxAmount   int64   `json:"largestReceivedTxAmount"`
-	LargestReceivedTxPointer  string  `json:"largestReceivedTxPointer"`
-	ReceivedOutsCount         int     `json:"receivedOutsCount"`
-	SpentOutsCount            int     `json:"spentOutsCount"`
-	PendingReceivedAmount     int64   `json:"pendingReceivedAmount"`
-	PendingSentAmount         int64   `json:"pendingSentAmount"`
-	PendingReceivedTxCount    int     `json:"pendingReceivedTxCount"`
-	PendingSentTxCount        int     `json:"pendingSentTxCount"`
-	PendingReceivedOutsCount  int     `json:"pendingReceivedOutsCount"`
-	PendingSpentOutsCount     int     `json:"pendingSpentOutsCount"`
-	Type                      string  `json:"type"`
+type Address struct {
+	apiV1URL string
+	logger   func(string)
 }
 
-
-type AddressTransactions struct {
-	List  []AddressTransaction `json:"list"`
-	Page  int                  `json:"page"`
-	Limit int                  `json:"limit"`
-	Pages int                  `json:"pages"`
-	Time  int64                `json:"time"`
+func NewAddress(config SDKConfig) *Address {
+	return &Address{
+		apiV1URL: config.BaseAPIURL,
+		logger:   func(arg string) { log.Println(arg) },
+	}
 }
 
-type AddressTransaction struct {
-	TxID   string `json:"txId"`
-	VOut   int    `json:"vOut"`
-	Block  int    `json:"block"`
-	TxIndex int   `json:"txIndex"`
-	Amount int64  `json:"amount"`
-}
-
-type AddressUTXO struct {
-	TxID   string `json:"txId"`
-	VOut   int    `json:"vOut"`
-	Block  int    `json:"block"`
-	TxIndex int   `json:"txIndex"`
-	Amount int64  `json:"amount"`
-}
-
-type AddressUTXO struct {
-	TxID    string `json:"txId"`
-	VOut    int    `json:"vOut"`
-	Block   int    `json:"block"`
-	TxIndex int    `json:"txIndex"`
-	Amount  int64  `json:"amount"`
-}
-
-type AddressUTXOs []AddressUTXO
-
-type Address interface {
-  ApiUrl string
-  GetAddressBalance(string address) (AddressBalance, error)
-	GetAddressTransactions(string address) (AddressTransaction, error)
-	GetAddressUTXO(string address) (AddressUTXOs, error)
-	getUnconfirmedAddressTransactions(string address) (AddressTransactions, error)
-}
-
-func (a *Address) GetAddressBalance(string address) (AddressBalance, error)  {
-	ctx := context.Background()
-	client := gohttpclient.New(API_URL)
-	response, err := client.Get(ctx, address + "/")
+func (a *Address) GetAddressBalance(address string) (*AddressBalance, error) {
+	url := fmt.Sprintf("%s/address/state/%s", a.apiV1URL, address)
+	data, err := a.get(url)
 	if err != nil {
-	  return nill, err	
-  }
+		return nil, err
+	}
+	// Parse the data into AddressBalance struct if needed
+	return &AddressBalance{}, nil
+}
 
-	var AddressBalance addressBalance
+func (a *Address) GetAddressTransactions(address string) (*AddressTransactions, error) {
+	url := fmt.Sprintf("%s/address/transactions/%s", a.apiV1URL, address)
+	data, err := a.get(url)
+	if err != nil {
+		return nil, err
+	}
+	// Parse the data into AddressTransactions struct if needed
+	return &AddressTransactions{}, nil
+}
 
-	if err := response.Unmarshall(&addressBalance); err != nil {
+func (a *Address) GetUnconfirmedAddressTransactions(address string) (*AddressTransactions, error) {
+	url := fmt.Sprintf("%s/address/unconfirmed/transactions/%s", a.apiV1URL, address)
+	data, err := a.get(url)
+	if err != nil {
+		return nil, err
+	}
+	// Parse the data into AddressTransactions struct if needed
+	return &AddressTransactions{}, nil
+}
+
+func (a *Address) GetAddressUTXO(address string) (*AddressUTXOs, error) {
+	url := fmt.Sprintf("%s/address/unconfirmed/transactions/%s", a.apiV1URL, address)
+	data, err := a.get(url)
+	if err != nil {
+		return nil, err
+	}
+	// Parse the data into AddressUTXOs struct if needed
+	return &AddressUTXOs{}, nil
+}
+
+func (a *Address) get(url string) (interface{}, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		a.logger(err.Error())
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		a.logger(err.Error())
 		return nil, err
 	}
 
-	return addressBalance, nil
+	var data interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		a.logger(err.Error())
+		return nil, err
+	}
+
+	return data, nil
 }
