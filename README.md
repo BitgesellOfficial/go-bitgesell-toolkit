@@ -1,7 +1,6 @@
 # go-bitgesell-toolkit
 <p align="center">
 <img src="doc/img/Bitgesell.png" style="height: 60px;"/>
-<p align="center">Sign Bitgesell Transactions offline</p>
 </p>
 
 `go-bitgesell-toolkit` is a toolkit for interacting with the Bitgesell blockchain. It provides convenient methods for accessing blockchain, transaction, mempool, and address-related data.
