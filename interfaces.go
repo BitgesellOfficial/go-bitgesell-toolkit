@@ -10,9 +10,9 @@ type Block struct {
 
 // SDKConfig represents the configuration for the SDK
 type SDKConfig struct {
-	BaseAPIURL string `json:"baseAPIURL"`
-	Logger     func(string) `json:"-"`
-	APIKey     string `json:"apiKey,omitempty"`
+	BaseAPIURL string
+	Logger     func(string) 
+	APIKey     string
 }
 
 // BlockHeader represents the block header type
